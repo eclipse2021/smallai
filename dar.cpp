@@ -22,3 +22,7 @@ void dar::pop(){
 		temp[i] = m_array[i];
 	}
 }
+
+void dar::push(double data){
+	
+}
