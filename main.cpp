@@ -107,12 +107,18 @@ public:
 
 class DQN{
 public:
-	Linear layer1 = Linear(3,3);
+	Linear layer1 = Linear(9, 10);
+	Linear layer2 = Linear(10, 10);
+	Linear layer3 = Linear(10, 9);
+	
 	DQN(){
 	}
 
-	vector<double> forward(vector<double> x){
+	vector<double> forward(vector<double> state){
+		vector<double> x;
+		return relu(layer1.forward(x));
 	}
+
 	~DQN(){
 	}
 };
@@ -237,8 +243,9 @@ public:
 			for(double column : row){
 				OUT.push_back(column);
 			}
-		}
+		
 		return OUT;
+		}
 	}
 
 	void print_game_screen(){
@@ -265,6 +272,7 @@ void print_vector(vector<double> arg_vec){	//obsolete func.
 
 
 int main(){
+	/*
 	TTT env;
 	while(true){
 		int x = 0;
@@ -274,5 +282,12 @@ int main(){
 		env.place_and_update(x, y);
 		cout << "reward = "<<env.reward() << endl;
 	}
+	*/
+	DQN agent;
+	vector<double> test;
+	for(int i = 0; i < 10; i++){
+		test.push_back(i -5);
+	}
+	print_vector(agent.forward(test));
 	return 0;
 }
