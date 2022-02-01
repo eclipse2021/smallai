@@ -1,8 +1,47 @@
 #include<iostream>
+
 #include<vector>
+#include<queue>
+
 #include<random>
 
 using namespace std;
+
+vector<double> relu(vector<double> x){
+	vector<double> OUT;
+	for(double node : x){
+		if(node <= 0) OUT.push_back(0);
+		else OUT.push_back(node);
+	}
+	return OUT;
+}
+
+typedef struct{
+	vector<vector<double>> state;
+	vector<double> action;
+	double reward;
+}ReplayBatch;
+
+class ReplayMemory{
+private:
+	queue<ReplayBatch> memory;
+	int capacity;
+public:
+	ReplayMemory(int arg_capacity){
+		this->capacity = arg_capacity;
+	}
+	void push(vector<vector<double>> arg_state, vector<double> arg_action, double arg_reward){
+		if(this->memory.size() < capacity){
+			ReplayBatch temp = {arg_state, arg_action, arg_reward};
+			this->memory.push(temp);
+		}
+		else{
+			ReplayBatch temp = {arg_state, arg_action, arg_reward};
+			this->memory.pop();
+			this->memory.push(temp);
+		}
+	}
+};
 
 class Linear{
 private:
@@ -12,7 +51,7 @@ private:
 	int out_dim;
 public:
 	Linear(int in_features, int out_features){
-		in_dim = in_features;
+		in_dim  = in_features;
 		out_dim = out_features;
 
 		random_device rd;
@@ -71,6 +110,9 @@ public:
 	Linear layer1 = Linear(3,3);
 	DQN(){
 	}
+
+	vector<double> forward(vector<double> x){
+	}
 	~DQN(){
 	}
 };
@@ -80,24 +122,157 @@ private:
 	vector<vector<double>> game_screen;
 	int width;
 	int height;
+	int id;
 public:
 	TTT(){
-		u = 3;
-		v = 3;
-		//le
+		id     = 1;
+		width  = 3;
+		height = 3;
+		/*
+		 * {{0, 0, 0},
+		 *  {0, 0, 0},
+		 *  {0, 0, 0}}
+		 */
+		for(int w = 0; w < width; w++){
+			vector<double> temp;
+			for(int h = 0; h < height; h++){
+				temp.push_back(0);
+			}
+			game_screen.push_back(temp);
+		}
+	}
+	int place_and_update(int x, int y){
+		if(game_screen[y][x] != 0) return -1;	//unable move
+		else{
+			game_screen[y][x] = id;
+			id *= -1;	
+		}
+		return 0;
+	}
+	double reward(){	//checks if game is over and rewards current agent
+		double counts = 0;
+		for(vector<double> row : game_screen){
+			for(double unit : row){
+				counts += unit;
+			}
+			if(counts == id * (-3)){
+				this->reset_and_restart();
+				return 1;      //win
+			}
+			else if(counts == id * 3){
+				this->reset_and_restart();
+				return -1;     //lose
+			}
+			else{
+				counts = 0;
+			}
+		}
+		for(int column = 0; column < width; column++){
+			for(vector<double> row : game_screen){
+				counts += row[column];
+			}
+			if(counts == id * (-3)){
+				this->reset_and_restart();
+				return 1;     //win
+			}
+			if(counts == id * 3){
+				this->reset_and_restart();
+				return -1;    //lose
+			}
+			else{
+				counts = 0;
+			}
+		}
+		for(int p = 0; p < width; p++){
+			counts += game_screen[p][p];
+		}
+		if(counts == id * (-3)){
+			this->reset_and_restart();
+			return 1;
+		}
+		if(counts == id * 3){
+			this->reset_and_restart();
+			return -1;
+		}
+		else{
+			counts = 0;
+		}
+		
+		for(int p = 0; p < width; p++){
+			counts += game_screen[p][2 - p];
+		}
+		if(counts == id * (-3)){
+			this->reset_and_restart();
+			return 1;
+		}
+		if(counts == id * 3){
+			this->reset_and_restart();
+			return -1;
+		}
+		else{
+			counts = 0;
+		}
+		return 0;	//no one won::game continues
 	}
 
-}
+	void reset_and_restart(){
+		id     = 1;
+		/*
+		 * {{0, 0, 0},
+		 *  {0, 0, 0},
+		 *  {0, 0, 0}}
+		 */
+		for(int w = 0; w < width; w++){
+			vector<double> temp;
+			for(int h = 0; h < height; h++){
+				temp.push_back(0);
+			}
+			game_screen.push_back(temp);
+		}
+	}
 
-double print_vector(vector<double> arg_vec){
+	vector<double> get_screen(){
+		vector<double> OUT;
+		for(vector<double> row : this->game_screen){
+			for(double column : row){
+				OUT.push_back(column);
+			}
+		}
+		return OUT;
+	}
+
+	void print_game_screen(){
+		cout << "----------\n";
+		for(vector<double> row : game_screen){
+			for(double column : row){
+				if(column == 1) cout << "O";
+				else if (column == -1) cout << "X";
+				else cout << "0";
+			}
+			cout << "\n";
+		}
+		cout << endl;
+	}
+};
+
+void print_vector(vector<double> arg_vec){	//obsolete func.
 	for(double unit : arg_vec){
 		cout << unit << ",";
 	}
 	cout << endl;
 }
 
+
+
 int main(){
-	DQN net;
-	net.layer1.print_weight();
+	TTT env;
+	while(true){
+		int x = 0;
+		int y = 0;
+		env.print_game_screen();
+		cin >> x >> y;
+		env.place_and_update(x, y);
+		cout << "reward = "<<env.reward() << endl;
+	}
 	return 0;
 }
