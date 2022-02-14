@@ -16,6 +16,23 @@ vector<double> relu(vector<double> x){
 	return OUT;
 }
 
+double relu(double x){
+	if(x <= 0) return 0;
+	else return x;
+}
+
+vector<double> sigmoid(vector<double> x){
+	vector<double> OUT;
+	for(double node : x){
+		OUT.push_back(1/(1+exp(-1.0 * node)));
+	}
+	return OUT;
+}
+
+double sigmoid(double x){
+	return 1/(1+exp(-1.0 * x));
+}
+
 typedef struct{
 	vector<vector<double>> state;
 	vector<double> action;
@@ -107,16 +124,23 @@ public:
 
 class DQN{
 public:
-	Linear layer1 = Linear(9, 10);
-	Linear layer2 = Linear(10, 10);
-	Linear layer3 = Linear(10, 9);
+	Linear layer1 = Linear(2, 3);
+	Linear layer2 = Linear(3, 3);
+	Linear layer3 = Linear(3, 1);
 	
 	DQN(){
 	}
 
 	vector<double> forward(vector<double> state){
 		vector<double> x;
-		return relu(layer1.forward(x));
+		x = relu(layer1.forward(state));
+		x = relu(layer2.forward(x));
+		x = sigmoid(layer3.forward(x));
+		return x;
+	}
+
+	void summary(){
+		return;
 	}
 
 	~DQN(){
@@ -243,9 +267,8 @@ public:
 			for(double column : row){
 				OUT.push_back(column);
 			}
-		
-		return OUT;
 		}
+		return OUT;
 	}
 
 	void print_game_screen(){
@@ -269,25 +292,10 @@ void print_vector(vector<double> arg_vec){	//obsolete func.
 	cout << endl;
 }
 
-
-
 int main(){
-	/*
-	TTT env;
-	while(true){
-		int x = 0;
-		int y = 0;
-		env.print_game_screen();
-		cin >> x >> y;
-		env.place_and_update(x, y);
-		cout << "reward = "<<env.reward() << endl;
-	}
-	*/
-	DQN agent;
-	vector<double> test;
-	for(int i = 0; i < 10; i++){
-		test.push_back(i -5);
-	}
-	print_vector(agent.forward(test));
+	vector<vector<double>> x = {{0.0,0.0},{0.0,1.0},{1.0,0.0},{1.0,1.0}};
+	vector<double> y = {0.0,1.0,1.0,0.0};
+	DQN net;
+	print_vector(net.forward(x[0]));
 	return 0;
 }
