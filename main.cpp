@@ -7,6 +7,24 @@
 
 using namespace std;
 
+//gradient tape
+
+typedef struct{
+	double value;
+	double *self;
+	double *y;
+}grad;
+
+class Gradient_tape{	//?
+public:
+	vector<grad>;
+	Gradient_tape(){
+	}
+}
+
+
+//activations
+
 vector<double> relu(vector<double> x){
 	vector<double> OUT;
 	for(double node : x){
@@ -32,6 +50,8 @@ vector<double> sigmoid(vector<double> x){
 double sigmoid(double x){
 	return 1/(1+exp(-1.0 * x));
 }
+
+//Replaymemory
 
 typedef struct{
 	vector<vector<double>> state;
@@ -60,10 +80,13 @@ public:
 	}
 };
 
+//NeuralNetworks
+
 class Linear{
 private:
 	vector<vector<double>> w;
 	vector<double> b;
+	vector<Tensor> gradint_chain;
 	int in_dim;
 	int out_dim;
 public:
@@ -122,11 +145,14 @@ public:
 	}
 };
 
+//
+
 class DQN{
 public:
 	Linear layer1 = Linear(2, 3);
 	Linear layer2 = Linear(3, 3);
 	Linear layer3 = Linear(3, 1);
+	vector<gradient> gradient_tape;
 	
 	DQN(){
 	}
@@ -146,6 +172,8 @@ public:
 	~DQN(){
 	}
 };
+
+//tic tac toe
 
 class TTT{
 private:
@@ -246,7 +274,7 @@ public:
 	}
 
 	void reset_and_restart(){
-		id     = 1;
+		id = 1;
 		/*
 		 * {{0, 0, 0},
 		 *  {0, 0, 0},
