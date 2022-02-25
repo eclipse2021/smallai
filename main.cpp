@@ -15,13 +15,16 @@ typedef struct{
 	double *y;
 }grad;
 
-class Gradient_tape{	//?
+//layers
+
+class MUL{
+private:
 public:
-	vector<grad>;
-	Gradient_tape(){
+	MUL(){
+	}
+	~MUL(){
 	}
 }
-
 
 //activations
 
@@ -86,7 +89,8 @@ class Linear{
 private:
 	vector<vector<double>> w;
 	vector<double> b;
-	vector<Tensor> gradint_chain;
+	vector<double> IN;
+	vector<double> OUT;
 	int in_dim;
 	int out_dim;
 public:
@@ -108,10 +112,16 @@ public:
 		for(int i = 0; i < out_features; i++){
 			b.push_back(dist(gen));
 		}
+		for(int i = 0; i < in_features; i++){
+			IN[i] = 0.0;
+		}
+		for(int i = 0; i < out_features; o++){
+			OUT[i] = 0.0;
+		}
 	}
 
 	void print_weight(){
-		cout << "w = {" << "\n";
+		cout << "w = {" << "\n";+
 		for(vector<double> i : w){
 			for(double o : i){
 				cout << o << ',';
@@ -128,15 +138,13 @@ public:
 		cout << "}" << endl;
 	}
 	
-	vector<double> forward(vector<double> x){
-		vector<double> OUT;
+	vector<double> forward(vector<double> x, vector<grad> *argp_tape){
+		IN = x;
 		for(int i = 0; i < out_dim; i++){
-			vector<double> temp_node;
-			double temp;
 			for(int o = 0; o < in_dim; o++){
-				temp += w[i][o] * x[0] + b[o];
+				OUT[i] += w[i][o] * IN[o];
 			}
-			OUT.push_back(temp);
+			OUT[i] += b[i];
 		}
 		return OUT;
 	}
@@ -152,16 +160,19 @@ public:
 	Linear layer1 = Linear(2, 3);
 	Linear layer2 = Linear(3, 3);
 	Linear layer3 = Linear(3, 1);
-	vector<gradient> gradient_tape;
+	vector<grad> gradient_tape;
 	
 	DQN(){
 	}
 
 	vector<double> forward(vector<double> state){
 		vector<double> x;
-		x = relu(layer1.forward(state));
-		x = relu(layer2.forward(x));
-		x = sigmoid(layer3.forward(x));
+		x = layer1.forward(state);
+		x = relu(x);
+		x = layer2.forward(x);
+		x = relu(x);
+		x = layer3.forward(x);
+		x = sigmoid(x);
 		return x;
 	}
 
@@ -321,8 +332,11 @@ void print_vector(vector<double> arg_vec){	//obsolete func.
 }
 
 int main(){
+	// test data
 	vector<vector<double>> x = {{0.0,0.0},{0.0,1.0},{1.0,0.0},{1.0,1.0}};
 	vector<double> y = {0.0,1.0,1.0,0.0};
+	//
+	
 	DQN net;
 	print_vector(net.forward(x[0]));
 	return 0;
