@@ -138,21 +138,95 @@ public:
 		cout << "}" << endl;
 	}
 	
-	vector<double> forward(vector<double> x, vector<grad> *argp_tape){
+	vector<double>* forward(vector<double> x, vector<grad> *argp_tape){
 		IN = x;
 		for(int i = 0; i < out_dim; i++){
 			for(int o = 0; o < in_dim; o++){
 				OUT[i] += w[i][o] * IN[o];
+
+				gard dw{IN[o], &w[i][o], &OUT[i]};
+				grad din{w[i][o], &IN[o], &OUT[i]};
+				argp_tape->push_back(dw);
+				argp_tape->push_back(din);
 			}
 			OUT[i] += b[i];
+
+			grad db{1.0, &b[i], &OUT[i]};
+			argp_tape->push_back(db);
 		}
-		return OUT;
+		return &OUT;
 	}
-	
+
+	vector<double> *forward(vector<double> *x, vector<grad> *argp_tape){
+		for(int i = 0; i < out_dim; i++){
+			for(int o = 0; o < in_dim; o++){
+				OUT[i] += w[i][o] * *x[o];
+
+				gard dw{&(*x)[o]/* */, &w[i][o], &OUT[i]};
+				grad din{w[i][o], &(*x)[o]/* */, &OUT[i]};
+				argp_tape->push_back(dw);
+				argp_tape->push_back(din);
+			}
+			OUT[i] += b[i];
+
+			grad db{1.0, &b[i], &OUT[i]};
+			argp_tape->push_back(db);
+		}
+		return &OUT;
+	}
+
 	~Linear(){
 	}
 };
 
+
+class Relu{
+private:
+	vector<double> IN;
+	vector<double> OUT;
+	int dim;
+public:
+	Relu(int arg_dim){
+		dim = arg_dim;
+		for(int i = 0; i < dim; i++){
+			IN[i] = 0.0;
+			OUT[i] = 0.0;
+		}
+	}
+	vector<double> forward(vector<double> x){
+		IN = x;
+		for(int i = 0; i < dim; i++){
+			if(IN[i] <= 0) OUT[i] = 0;
+			else OUT[i] = IN[i];
+		}
+		return OUT;
+	}
+	~Relu(){
+	}
+}
+
+class Sigmoid{
+private:
+	vector<double> IN;
+	vector<double> OUT;
+	int dim;
+public:
+	Sigmoid(int arg_dim){
+		dim = arg_dim;
+		for(int i = 0; i < dim; i++){
+			IN[i] = 0.0;
+			OUT[i] = 0.0;
+		}
+	}
+	vector<double> forward(vector<double> x){
+		IN = x;
+		for(int i = 0; i < dim; i++){
+			OUT[i] = 1/(1 + exp(-1 * IN[i]);
+		}
+		return OUT;
+	}
+	~Sigmoid(){}
+}
 //
 
 class DQN{

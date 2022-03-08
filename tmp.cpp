@@ -3,13 +3,30 @@
 
 using namespace std;
 
-void app(vector<double> *argp_li){
-	&argp_li.push_back(0.0);
+class Temtem
+{
+private:
+	double value;
+public:
+	Temtem()
+	{
+		value = 0.0;
+	}
+	double rt_pointer()
+	{
+		return &value;
+	}
 }
 
-int main(){
-	vector<double> li;
-	app(*li);
-	std::cout << li[0] << std::endl;
+void print_value(double *argp_double)
+{
+	cout << argp_double;
+}
+
+int main()
+{
+	Temtem tem;
+	print_value(tem.value);
+
 	return 0;
 }
