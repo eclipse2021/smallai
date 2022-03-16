@@ -15,7 +15,7 @@ typedef struct{
 	double *y;
 }grad;
 
-//activations
+//activations(obsolete)
 
 vector<double> relu(vector<double> x){
 	vector<double> OUT;
@@ -72,7 +72,7 @@ public:
 	}
 };
 
-//NeuralNetworks
+//Layers
 
 class Linear{
 private:
@@ -104,13 +104,13 @@ public:
 		for(int i = 0; i < in_features; i++){
 			IN[i] = 0.0;
 		}
-		for(int i = 0; i < out_features; o++){
+		for(int i = 0; i < out_features; i++){
 			OUT[i] = 0.0;
 		}
 	}
 
 	void print_weight(){
-		cout << "w = {" << "\n";+
+		cout << "w = {" << "\n";
 		for(vector<double> i : w){
 			for(double o : i){
 				cout << o << ',';
@@ -133,7 +133,7 @@ public:
 			for(int o = 0; o < in_dim; o++){
 				OUT[i] += w[i][o] * IN[o];
 
-				gard dw{IN[o], &w[i][o], &OUT[i]};
+				grad dw{IN[o], &w[i][o], &OUT[i]};
 				grad din{w[i][o], &IN[o], &OUT[i]};
 				argp_tape->push_back(dw);
 				argp_tape->push_back(din);
@@ -151,8 +151,8 @@ public:
 			for(int o = 0; o < in_dim; o++){
 				OUT[i] += w[i][o] * (*x)[o];
 
-				gard dw{&(*x)[o]/* */, &w[i][o], &OUT[i]};
-				grad din{w[i][o], &(*x)[o]/* */, &OUT[i]};
+				grad dw{(*x)[o], &w[i][o], &OUT[i]};
+				grad din{w[i][o], &(*x)[o], &OUT[i]};
 				argp_tape->push_back(dw);
 				argp_tape->push_back(din);
 			}
@@ -200,7 +200,7 @@ public:
 
 	~Relu(){
 	}
-}
+};
 
 class Sigmoid{
 private:
@@ -210,18 +210,19 @@ public:
 	Sigmoid(int arg_dim){
 		dim = arg_dim;
 		for(int i = 0; i < dim; i++){
-			IN[i] = 0.0;
 			OUT[i] = 0.0;
 		}
 	}
 
 	vector<double> *forward(vector<double> *x, vector<grad> *argp_tape){
 		for(int i = 0; i < dim; i++){
-			OUT[i] = 1/(1 + exp(-1 * (*x)[i]);
+			OUT[i] = 1/(1 + exp(-1 * (*x)[i]));
 
 			grad dydx{OUT[i] * (1 - OUT[i]), &(*x)[i], &OUT[i]};
 			argp_tape->push_back(dydx);
 		}
+
+		return &OUT;
 	}
 
 	~Sigmoid(){}
@@ -236,6 +237,7 @@ public:
 	Relu relu2 = Relu(3);
 	Linear fc3 = Linear(3, 1);
 	Sigmoid out = Sigmoid(1);
+
 	vector<grad> gradient_tape;
 	vector<grad> *gradient;
 	
@@ -246,11 +248,11 @@ public:
 	vector<double> forward(vector<double> state){
 		vector<double> *x;
 		x = fc1.forward(state, gradient);
-		x = relu1(x, gradient);
+		x = relu1.forward(x, gradient);
 		x = fc2.forward(x, gradient);
-		x = relu(x, gradient);
-		x = layer3.forward(x, gradient);
-		x = sigmoid(x, gradient;
+		x = relu2.forward(x, gradient);
+		x = fc3.forward(x, gradient);
+		x = out.forward(x, gradient);
 		return *x;
 	}
 
@@ -417,5 +419,6 @@ int main(){
 	
 	DQN net;
 	print_vector(net.forward(x[0]));
+	cout << "program ended" << endl;
 	return 0;
 }
