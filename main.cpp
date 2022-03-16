@@ -7,24 +7,13 @@
 
 using namespace std;
 
-//gradient tape
+//gradient
 
 typedef struct{
 	double value;
 	double *self;
 	double *y;
 }grad;
-
-//layers
-
-class MUL{
-private:
-public:
-	MUL(){
-	}
-	~MUL(){
-	}
-}
 
 //activations
 
@@ -138,7 +127,7 @@ public:
 		cout << "}" << endl;
 	}
 	
-	vector<double>* forward(vector<double> x, vector<grad> *argp_tape){
+	vector<double> *forward(vector<double> x, vector<grad> *argp_tape){
 		IN = x;
 		for(int i = 0; i < out_dim; i++){
 			for(int o = 0; o < in_dim; o++){
@@ -160,7 +149,7 @@ public:
 	vector<double> *forward(vector<double> *x, vector<grad> *argp_tape){
 		for(int i = 0; i < out_dim; i++){
 			for(int o = 0; o < in_dim; o++){
-				OUT[i] += w[i][o] * *x[o];
+				OUT[i] += w[i][o] * (*x)[o];
 
 				gard dw{&(*x)[o]/* */, &w[i][o], &OUT[i]};
 				grad din{w[i][o], &(*x)[o]/* */, &OUT[i]};
@@ -182,32 +171,39 @@ public:
 
 class Relu{
 private:
-	vector<double> IN;
 	vector<double> OUT;
 	int dim;
 public:
 	Relu(int arg_dim){
 		dim = arg_dim;
 		for(int i = 0; i < dim; i++){
-			IN[i] = 0.0;
 			OUT[i] = 0.0;
 		}
 	}
-	vector<double> forward(vector<double> x){
-		IN = x;
-		for(int i = 0; i < dim; i++){
-			if(IN[i] <= 0) OUT[i] = 0;
-			else OUT[i] = IN[i];
+
+	vector<double> *forward(vector<double> *x, vector<grad> *argp_tape){
+		for(int i = 0; i < dim;  i++){
+			if((*x)[i] <= 0){
+				OUT[i] = 0;
+				grad dydx{0, &(*x)[i], &OUT[i]};
+				argp_tape->push_back(dydx);
+			}
+			else{
+				OUT[i] = (*x)[i];
+				grad dydx{1, &(*x)[i], &OUT[i]};
+				argp_tape->push_back(dydx);
+			}
 		}
-		return OUT;
+
+		return &OUT;
 	}
+
 	~Relu(){
 	}
 }
 
 class Sigmoid{
 private:
-	vector<double> IN;
 	vector<double> OUT;
 	int dim;
 public:
@@ -218,36 +214,44 @@ public:
 			OUT[i] = 0.0;
 		}
 	}
-	vector<double> forward(vector<double> x){
-		IN = x;
+
+	vector<double> *forward(vector<double> *x, vector<grad> *argp_tape){
 		for(int i = 0; i < dim; i++){
-			OUT[i] = 1/(1 + exp(-1 * IN[i]);
+			OUT[i] = 1/(1 + exp(-1 * (*x)[i]);
+
+			grad dydx{OUT[i] * (1 - OUT[i]), &(*x)[i], &OUT[i]};
+			argp_tape->push_back(dydx);
 		}
-		return OUT;
 	}
+
 	~Sigmoid(){}
-}
+};
 //
 
 class DQN{
 public:
-	Linear layer1 = Linear(2, 3);
-	Linear layer2 = Linear(3, 3);
-	Linear layer3 = Linear(3, 1);
+	Linear fc1 = Linear(2, 3);
+	Relu relu1 = Relu(3);
+	Linear fc2 = Linear(3, 3);
+	Relu relu2 = Relu(3);
+	Linear fc3 = Linear(3, 1);
+	Sigmoid out = Sigmoid(1);
 	vector<grad> gradient_tape;
+	vector<grad> *gradient;
 	
 	DQN(){
+		gradient = &gradient_tape;
 	}
 
 	vector<double> forward(vector<double> state){
-		vector<double> x;
-		x = layer1.forward(state);
-		x = relu(x);
-		x = layer2.forward(x);
-		x = relu(x);
-		x = layer3.forward(x);
-		x = sigmoid(x);
-		return x;
+		vector<double> *x;
+		x = fc1.forward(state, gradient);
+		x = relu1(x, gradient);
+		x = fc2.forward(x, gradient);
+		x = relu(x, gradient);
+		x = layer3.forward(x, gradient);
+		x = sigmoid(x, gradient;
+		return *x;
 	}
 
 	void summary(){
