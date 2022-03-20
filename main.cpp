@@ -15,34 +15,6 @@ typedef struct{
 	double *y;
 }grad;
 
-//activations(obsolete)
-
-vector<double> relu(vector<double> x){
-	vector<double> OUT;
-	for(double node : x){
-		if(node <= 0) OUT.push_back(0);
-		else OUT.push_back(node);
-	}
-	return OUT;
-}
-
-double relu(double x){
-	if(x <= 0) return 0;
-	else return x;
-}
-
-vector<double> sigmoid(vector<double> x){
-	vector<double> OUT;
-	for(double node : x){
-		OUT.push_back(1/(1+exp(-1.0 * node)));
-	}
-	return OUT;
-}
-
-double sigmoid(double x){
-	return 1/(1+exp(-1.0 * x));
-}
-
 //Replaymemory
 
 typedef struct{
@@ -243,6 +215,7 @@ public:
 	
 	DQN(){
 		gradient = &gradient_tape;
+		cout << "DQN constructed" << endl;
 	}
 
 	vector<double> forward(vector<double> state){
@@ -257,7 +230,6 @@ public:
 	}
 
 	void summary(){
-		return;
 	}
 
 	~DQN(){
@@ -412,6 +384,7 @@ void print_vector(vector<double> arg_vec){	//obsolete func.
 }
 
 int main(){
+	/*
 	// test data
 	vector<vector<double>> x = {{0.0,0.0},{0.0,1.0},{1.0,0.0},{1.0,1.0}};
 	vector<double> y = {0.0,1.0,1.0,0.0};
@@ -419,6 +392,9 @@ int main(){
 	
 	DQN net;
 	print_vector(net.forward(x[0]));
-	cout << "program ended" << endl;
+	*/
+	// cout << "0" << endl;
+	DQN net;
+	cout << "0" << endl;
 	return 0;
 }
