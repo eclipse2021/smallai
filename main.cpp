@@ -74,10 +74,10 @@ public:
 			b.push_back(dist(gen));
 		}
 		for(int i = 0; i < in_features; i++){
-			IN[i] = 0.0;
+			IN.push_back(0.0);
 		}
 		for(int i = 0; i < out_features; i++){
-			OUT[i] = 0.0;
+			OUT.push_back(0.0);
 		}
 	}
 
@@ -149,7 +149,7 @@ public:
 	Relu(int arg_dim){
 		dim = arg_dim;
 		for(int i = 0; i < dim; i++){
-			OUT[i] = 0.0;
+			OUT.push_back(0.0);
 		}
 	}
 
@@ -182,7 +182,7 @@ public:
 	Sigmoid(int arg_dim){
 		dim = arg_dim;
 		for(int i = 0; i < dim; i++){
-			OUT[i] = 0.0;
+			OUT.push_back(0.0);
 		}
 	}
 
@@ -211,21 +211,18 @@ public:
 	Sigmoid out = Sigmoid(1);
 
 	vector<grad> gradient_tape;
-	vector<grad> *gradient;
 	
 	DQN(){
-		gradient = &gradient_tape;
-		cout << "DQN constructed" << endl;
 	}
 
 	vector<double> forward(vector<double> state){
 		vector<double> *x;
-		x = fc1.forward(state, gradient);
-		x = relu1.forward(x, gradient);
-		x = fc2.forward(x, gradient);
-		x = relu2.forward(x, gradient);
-		x = fc3.forward(x, gradient);
-		x = out.forward(x, gradient);
+		x = fc1.forward(state, &gradient_tape);
+		x = relu1.forward(x, &gradient_tape);
+		x = fc2.forward(x, &gradient_tape);
+		x = relu2.forward(x, &gradient_tape);
+		x = fc3.forward(x, &gradient_tape);
+		x = out.forward(x, &gradient_tape);
 		return *x;
 	}
 
@@ -384,7 +381,6 @@ void print_vector(vector<double> arg_vec){	//obsolete func.
 }
 
 int main(){
-	/*
 	// test data
 	vector<vector<double>> x = {{0.0,0.0},{0.0,1.0},{1.0,0.0},{1.0,1.0}};
 	vector<double> y = {0.0,1.0,1.0,0.0};
@@ -392,9 +388,5 @@ int main(){
 	
 	DQN net;
 	print_vector(net.forward(x[0]));
-	*/
-	// cout << "0" << endl;
-	DQN net;
-	cout << "0" << endl;
 	return 0;
 }
