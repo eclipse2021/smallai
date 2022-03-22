@@ -136,6 +136,9 @@ public:
 		return &OUT;
 	}
 
+	void backward(vector<grad> *argp_tape){
+	}
+
 	~Linear(){
 	}
 };
@@ -224,6 +227,15 @@ public:
 		x = fc3.forward(x, &gradient_tape);
 		x = out.forward(x, &gradient_tape);
 		return *x;
+	}
+
+	void backward(){
+		double *target = this->gradient_tape.back().self;
+		for(grad gradient : this->gradient_tape){
+			if(gradient.y == target){
+				target = gradient.self;
+			}
+		}
 	}
 
 	void summary(){
@@ -380,6 +392,13 @@ void print_vector(vector<double> arg_vec){	//obsolete func.
 	cout << endl;
 }
 
+void print_vector(vector<grad> arg_vec){
+	for(grad unit : arg_vec){
+		cout << unit.value << " , ";
+	}
+	cout << endl;
+}
+
 int main(){
 	// test data
 	vector<vector<double>> x = {{0.0,0.0},{0.0,1.0},{1.0,0.0},{1.0,1.0}};
@@ -388,5 +407,6 @@ int main(){
 	
 	DQN net;
 	print_vector(net.forward(x[0]));
+	cout << net.gradient_tape.back().value << endl;
 	return 0;
 }
