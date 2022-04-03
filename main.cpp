@@ -48,13 +48,14 @@ public:
 
 class Linear{
 private:
-	vector<vector<double>> w;
-	vector<double> b;
 	vector<double> IN;
 	vector<double> OUT;
 	int in_dim;
 	int out_dim;
 public:
+	vector<vector<double>> w;
+	vector<double> b;
+
 	Linear(int in_features, int out_features){
 		in_dim  = in_features;
 		out_dim = out_features;
@@ -230,18 +231,48 @@ public:
 	}
 
 	void backward(){
-		double *target = this->gradient_tape.back().self;
+		cout << "[degug]tracing gradients..." << endl;
+		vector<grad> calculated_gradients;
+
+		calculated_gradients.push_back(this->gradient_tape.back());
+		for(grad chain : calculated_gradients){
+			for(grad gradient : this->gradient_tape){
+				if(chain.self == gradient.y){
+					grad new_chain{chain.value * gradient.value, gradient.self, chain.y};
+					calculated_gradients.push_back(new_chain);
+				}
+			}
+		}
+		/*
 		for(grad gradient : this->gradient_tape){
 			if(gradient.y == target){
 				target = gradient.self;
 			}
 		}
+		*/
+		cout << "[debug]...all parameters updated" << endl;
+	}
+
+	void zero_grad(){
+		this->gradient_tape.clear();
 	}
 
 	void summary(){
 	}
 
 	~DQN(){
+	}
+};
+
+//MSE
+
+class MSE{
+private:
+public:
+	MSE(){
+
+	}	
+	~MSE(){
 	}
 };
 
@@ -406,7 +437,8 @@ int main(){
 	//
 	
 	DQN net;
-	print_vector(net.forward(x[0]));
-	cout << net.gradient_tape.back().value << endl;
+	net.fc1.print_weight();
+	net.fc1.w[0][0] = 0.0;
+	net.fc1.print_weight();
 	return 0;
 }
