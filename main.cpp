@@ -242,6 +242,18 @@ public:
 					calculated_gradients.push_back(new_chain);
 				}
 			}
+			int idx = 0;
+			while (idx < calculated_gradients.size()){
+				if(calculated_gradients[idx].y == chain.y){
+					calculated_gradients.erase(calculated_gradients.begin() + idx);
+				}
+				idx ++;
+			}
+			for(grad updated : calculated_gradients){
+				if(chain.y == updated.y){
+
+				}
+			}
 		}
 		/*
 		for(grad gradient : this->gradient_tape){
