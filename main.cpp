@@ -234,34 +234,31 @@ public:
 		cout << "[degug]tracing gradients..." << endl;
 		vector<grad> calculated_gradients;
 
+		for(grad gr : this->gradient_tape){
+			if(gr.y == this->gradient_tape.back().y && gr.self != this.gradient_tape.back().self){
+				calculated_gradients.push_back(gr);
+			}
+		}
 		calculated_gradients.push_back(this->gradient_tape.back());
 		for(grad chain : calculated_gradients){
+			int require_gradient = 1;
 			for(grad gradient : this->gradient_tape){
 				if(chain.self == gradient.y){
+					require_gradient = 0;
 					grad new_chain{chain.value * gradient.value, gradient.self, chain.y};
 					calculated_gradients.push_back(new_chain);
 				}
 			}
-			int idx = 0;
-			while (idx < calculated_gradients.size()){
-				if(calculated_gradients[idx].y == chain.y){
-					calculated_gradients.erase(calculated_gradients.begin() + idx);
-				}
-				idx ++;
-			}
-			for(grad updated : calculated_gradients){
-				if(chain.y == updated.y){
-
+			if(require_gradient == 0){
+				int idx = 0;
+				while (idx < calculated_gradients.size()){
+					if(calculated_gradients[idx].self == chain.self){
+						calculated_gradients.erase(calculated_gradients.begin() + idx);
+					}
+					idx ++;
 				}
 			}
 		}
-		/*
-		for(grad gradient : this->gradient_tape){
-			if(gradient.y == target){
-				target = gradient.self;
-			}
-		}
-		*/
 		cout << "[debug]...all parameters updated" << endl;
 	}
 
