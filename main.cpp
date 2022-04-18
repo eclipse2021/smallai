@@ -140,6 +140,11 @@ public:
 	void backward(vector<grad> *argp_tape){
 	}
 
+	int capacity(){
+		/*  reutrns the number of total parameters  */
+		return ((this->in_dim * this->out_dim) + this->out_dim);
+	}
+
 	~Linear(){
 	}
 };
@@ -231,35 +236,56 @@ public:
 	}
 
 	void backward(){
-		cout << "[degug]tracing gradients..." << endl;
-		vector<grad> calculated_gradients;
+		cout << "[degug]tracing gradients..." << endl;    // debug log
+		vector<grad> gradient_per_parameter;
+		vector<grad> delta_parameter;
 
 		for(grad gr : this->gradient_tape){
 			if(gr.y == this->gradient_tape.back().y && gr.self != this.gradient_tape.back().self){
-				calculated_gradients.push_back(gr);
+				gradient_per_parameter.push_back(gr);
 			}
 		}
-		calculated_gradients.push_back(this->gradient_tape.back());
-		for(grad chain : calculated_gradients){
+		gradient_per_parameter.push_back(this->gradient_tape.back());
+		for(grad chain : gradient_per_parameter){
 			int require_gradient = 1;
 			for(grad gradient : this->gradient_tape){
 				if(chain.self == gradient.y){
 					require_gradient = 0;
 					grad new_chain{chain.value * gradient.value, gradient.self, chain.y};
-					calculated_gradients.push_back(new_chain);
+					gradient_per_parameter.push_back(new_chain);
 				}
 			}
 			if(require_gradient == 0){
 				int idx = 0;
-				while (idx < calculated_gradients.size()){
-					if(calculated_gradients[idx].self == chain.self){
-						calculated_gradients.erase(calculated_gradients.begin() + idx);
+				while (idx < gradient_per_parameter.size()){
+					if(gradient_per_parameter[idx].self == chain.self){
+						gradient_per_parameter.erase(gradient_per_parameter.begin() + idx);
 					}
 					idx ++;
 				}
 			}
 		}
-		cout << "[debug]...all parameters updated" << endl;
+
+		for(grad gr : gradient_per_parameter){
+			int is_already_set = 0;
+			int DEBUG_parameter_counter = 0;    //debug
+			for(grad delta : delta_parameter){
+				if(delta.self == gr.self){
+					int is_already_set = 1;
+					delta.value += gr.value;
+				}
+			}
+			if(is_already_set == 0){
+				delta_parameter.push_back(gr);
+				DEBUG_parameter_counter += 1;    //debug
+			}
+		}
+		cout << "[debug]" << "fc1:" << fc1.capacity() << "parameters online\n";    // debug
+		cout << "[debug]" << "fc2:" << fc2.capacity() << "parameters online\n";    // debug
+		cout << "[debug]" << "fc3:" << fc3.capacity() << "parameters online\n";    // debug
+
+		cout << "[debug]found" << DEBUG_parameter_counter << "parameters to update\n";    // debug
+		cout << "[debug]...all parameters updated" << endl;    // debug log
 	}
 
 	void zero_grad(){
