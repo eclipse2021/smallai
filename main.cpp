@@ -212,11 +212,11 @@ public:
 
 class DQN{
 public:
-	Linear fc1 = Linear(2, 3);
-	Relu relu1 = Relu(3);
-	Linear fc2 = Linear(3, 3);
-	Relu relu2 = Relu(3);
-	Linear fc3 = Linear(3, 1);
+	Linear fc1  = Linear(2, 3);
+	Relu relu1  = Relu(3);
+	Linear fc2  = Linear(3, 3);
+	Relu relu2  = Relu(3);
+	Linear fc3  = Linear(3, 1);
 	Sigmoid out = Sigmoid(1);
 
 	vector<grad> gradient_tape;
@@ -224,7 +224,8 @@ public:
 	DQN(){
 	}
 
-	vector<double> forward(vector<double> state){
+	vector<double> *forward(vector<double> state){
+		cout << "[debug/DQN/*forward()]entry" << endl; // passed
 		vector<double> *x;
 		x = fc1.forward(state, &gradient_tape);
 		x = relu1.forward(x, &gradient_tape);
@@ -232,16 +233,17 @@ public:
 		x = relu2.forward(x, &gradient_tape);
 		x = fc3.forward(x, &gradient_tape);
 		x = out.forward(x, &gradient_tape);
-		return *x;
+		cout << "[debug/DQN/*forward()]returned *" << endl; // passed
+		return x;
 	}
 
 	void backward(){
 		cout << "[degug]tracing gradients..." << endl;    // debug log
-		vector<grad> gradient_per_parameter;
-		vector<grad> delta_parameter;
+		vector<grad> gradient_per_parameter;    //
+		vector<grad> delta_parameter;    //actual gradient
 
 		for(grad gr : this->gradient_tape){
-			if(gr.y == this->gradient_tape.back().y && gr.self != this.gradient_tape.back().self){
+			if(gr.y == this->gradient_tape.back().y && gr.self != this->gradient_tape.back().self){
 				gradient_per_parameter.push_back(gr);
 			}
 		}
@@ -266,9 +268,9 @@ public:
 			}
 		}
 
+		int DEBUG_parameter_counter = 0;    //debug
 		for(grad gr : gradient_per_parameter){
 			int is_already_set = 0;
-			int DEBUG_parameter_counter = 0;    //debug
 			for(grad delta : delta_parameter){
 				if(delta.self == gr.self){
 					int is_already_set = 1;
@@ -277,7 +279,7 @@ public:
 			}
 			if(is_already_set == 0){
 				delta_parameter.push_back(gr);
-				DEBUG_parameter_counter += 1;    //debug
+				DEBUG_parameter_counter ++;    //debug
 			}
 		}
 		cout << "[debug]" << "fc1:" << fc1.capacity() << "parameters online\n";    // debug
@@ -285,6 +287,14 @@ public:
 		cout << "[debug]" << "fc3:" << fc3.capacity() << "parameters online\n";    // debug
 
 		cout << "[debug]found" << DEBUG_parameter_counter << "parameters to update\n";    // debug
+
+		/*
+		cout << "[debug]updating...\n";
+		for(grad delta : delta_parameter){
+			//update parameters
+			*(delta.self) -= delta.value;
+		}
+		*/
 		cout << "[debug]...all parameters updated" << endl;    // debug log
 	}
 
@@ -300,13 +310,34 @@ public:
 };
 
 //MSE
-
+/*
+double loss(double *prediction, double *lable, vector<grad> *argp_tape){
+	double loss = (*prediction) - (*lable);
+	double squared_loss = loss * loss;
+	grad dE_dy{loss, prediction, lable};
+	argp_tape->push_back(dE_dy);
+	return squared_loss/2;
+}
+*/
+double loss(vector<double> *prediction, double *lable, vector<grad> *argp_tape){
+	cout << "[loss()] entry" << endl;
+	int idx = 0;
+	double total_loss = 0;
+	while(idx < (*prediction).size()){
+		double loss = (*prediction)[idx] - *lable;
+		double squared_loss = loss * loss;
+		grad dE_dy{loss, &(*prediction)[idx], lable};
+		argp_tape->push_back(dE_dy);
+		total_loss += squared_loss/2;
+		idx ++;
+	}
+	return total_loss;
+}
 class MSE{
 private:
 public:
 	MSE(){
-
-	}	
+	}
 	~MSE(){
 	}
 };
@@ -472,8 +503,11 @@ int main(){
 	//
 	
 	DQN net;
-	net.fc1.print_weight();
-	net.fc1.w[0][0] = 0.0;
-	net.fc1.print_weight();
+	cout << "[debug/main]constructed network\n"; //passed
+	double E = loss(net.forward(x[0]), &(y[0]), &(net.gradient_tape));
+	cout << "[debug/main]forward complete\n";
+	cout << "[debug/main]calculated loss" << endl;
+	net.backward();
+
 	return 0;
 }
